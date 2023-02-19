@@ -1,6 +1,17 @@
 import requests
+import pygame
+import sys
 
+pygame.init()
 server_path = "http://127.0.0.1:5000"
+
+size = width, height = 1920, 1080
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Навозники')
+clock = pygame.time.Clock()
+FPS = 50
+
+all_sprites = pygame.sprite.Group()
 
 
 def get_management_server(current=''):
@@ -23,6 +34,144 @@ def send_data(game_data, current=''):
 
 
 # КОД ИГРЫ -->
+class Bug(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, angle, name):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = bug_image
+        self.rect = self.image.get_rect()
+        self.rect.center = (pos_x, pos_y)
+        self.angle = angle
+        self.rotate(angle)
+        self.name = name
+
+    def rotate(self, a):
+        self.image = pygame.transform.rotate(self.image, a)
+
+    def update(self, data):
+        self.rect.center = data[self.name][:2]
+        self.rotate(data[self.name][-1] - self.angle)
+        self.angle = data[self.name][-1]
+
+
+class Ball(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, k):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = ball_image
+        self.rect = self.image.get_rect()
+        self.rect.center = (pos_x, pos_y)
+        self.k = k
+
+    def update(self, data):
+        pass
+
+    def get(self):
+        return [self.rect.center]
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+bug_image = pygame.image.load('data/bug.png').convert()
+bug_image.set_colorkey((255, 255, 255))
+bug_image = pygame.transform.scale(bug_image, (100, 70))
+
+ball_image = pygame.image.load('data/ball.png').convert()
+ball_image.set_colorkey((255, 255, 255))
+ball_image = pygame.transform.scale(ball_image, (100, 100))
+
+menu_image = pygame.image.load('data/menu.png').convert()
+menu_image.set_colorkey((255, 255, 255))
+menu_image = pygame.transform.scale(menu_image, (1920, 1080))
+
+back = pygame.image.load('data/back.png').convert()
+back.set_colorkey((255, 255, 255))
+back = pygame.transform.scale(back, (1920, 1080))
+
+back2 = pygame.image.load('data/back2.png').convert()
+back2.set_colorkey((255, 255, 255))
+back2 = pygame.transform.scale(back2, (1920, 1080))
+
+# НАЧАЛО ИГРЫ ---->
+
+data = send_data({}, 'ochered')  # {'game': False, 'you': 'juck1'}
+my_name = data['you']
+print(my_name)
+k = 0
+if not data['game']:
+    while True:
+        clock.tick(FPS)
+        screen.fill((43, 43, 43))
+        k += 1
+        if k >= 55:
+            k = 0
+            if get_management_server('ochered')['game']:  # {'game': True}
+                break
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    terminate()
+        screen.blit(menu_image, (0, 0))
+        pygame.display.flip()
+
+juck1 = Bug(100, 100, 0, 'juck1')
+juck2 = Bug(1920 - 100, 1080 - 100, 180, 'juck2')
+ball = Ball(1920 // 2, 1080 // 2, 1)
+
+all_sprites.add(juck1)
+all_sprites.add(juck2)
+all_sprites.add(ball)
+
+data = get_management_server()
 
 while True:
-    exec(f"print({input('-> ')})")
+    clock.tick(FPS)
+    screen.fill((33, 33, 33))
+    if my_name == 'juck1':
+        screen.blit(back, (0, 0))
+    else:
+        screen.blit(back2, (0, 0))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            terminate()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                terminate()
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_a]:
+        data[my_name][0] -= 2
+        data[my_name][-1] = 0
+    if keys[pygame.K_w]:
+        data[my_name][1] -= 2
+        data[my_name][-1] = 270
+    if keys[pygame.K_d]:
+        data[my_name][0] += 2
+        data[my_name][-1] = 180
+    if keys[pygame.K_s]:
+        data[my_name][1] += 2
+        data[my_name][-1] = 90
+
+    send_data({'name': my_name, 'my': data[my_name], 'ball': data['ball']})
+    data = get_management_server()
+
+    if my_name == 'juck1':
+        if data['ball'][0] <= 0:
+            terminate()  # <---- Дописать проигрыш
+        if data['ball'][0] >= 1080:
+            terminate()  # <---- Дописать попеду
+
+    if my_name == 'juck2':
+        if data['ball'][0] <= 0:
+            terminate() # <---- Дописать попеду
+        if data['ball'][0] >= 1080:
+            terminate() # <---- Дописать проигрыш
+        pass  # <--------- здесь дописать толкание какашки двумя жуками
+
+    all_sprites.update(data)
+
+    all_sprites.draw(screen)
+    pygame.display.flip()

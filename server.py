@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-game_data = {"juck1": [], "juck2": [], "govno": []}
+game_data = {'ball': [1920 // 2, 1080 // 2], 'juck1': [100, 100, 0], 'juck2': [1920 - 100, 1080 - 100, 180]}
 ochered = 0
 
 
@@ -19,7 +19,7 @@ def och():
         if ochered == 1:
             ochered += 1
             return jsonify({"game": True, "you": "juck2"})
-        else:
+        elif ochered == 0:
             ochered += 1
             return jsonify({"game": False, "you": "juck1"})
 
@@ -31,10 +31,9 @@ def index():
         return jsonify(game_data)
     elif request.method == 'POST':
         data = request.json
-        print(data)
         game_data[data["name"]] = data["my"]
         if data["name"] == 'juck1':
-            game_data["govno"] = data["govno"]
+            game_data["ball"] = data["ball"]
     return jsonify({"all": 'ok'})
 
 
