@@ -9,4 +9,10 @@ def get_management_server() -> dict:
     # ИГРА return [[12, 123], [123, 123], False]
     pass
 
+
+def send_data(game_data: dict[[int, int], [int, int]]):
+    """game_data:
+                [[ПОложение жука X(int), ПОложение жука Y(int)], [ПОложение говна X(int), ПОложение говна Y(int)]]"""
+    pass
+
 # КОД ИГРЫ -->
