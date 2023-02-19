@@ -73,6 +73,23 @@ def terminate():
     sys.exit()
 
 
+def end_window(n):
+    while True:
+        clock.tick(FPS)
+        screen.fill((43, 43, 43))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    terminate()
+        if n == 'win':
+            screen.blit(win, (0, 0))
+        else:
+            screen.blit(lose, (0, 0))
+        pygame.display.flip()
+
+
 bug_image = pygame.image.load('data/bug.png').convert()
 bug_image.set_colorkey((255, 255, 255))
 bug_image = pygame.transform.scale(bug_image, (100, 70))
@@ -92,6 +109,14 @@ back = pygame.transform.scale(back, (1920, 1080))
 back2 = pygame.image.load('data/back2.png').convert()
 back2.set_colorkey((255, 255, 255))
 back2 = pygame.transform.scale(back2, (1920, 1080))
+
+win = pygame.image.load('data/win.png').convert()
+win.set_colorkey((255, 255, 255))
+win = pygame.transform.scale(win, (1920, 1080))
+
+lose = pygame.image.load('data/lose.png').convert()
+lose.set_colorkey((255, 255, 255))
+lose = pygame.transform.scale(lose, (1920, 1080))
 
 # НАЧАЛО ИГРЫ ---->
 
@@ -160,15 +185,14 @@ while True:
 
     if my_name == 'juck1':
         if data['ball'][0] <= 0:
-            terminate()  # <---- Дописать проигрыш
+            end_window('lose')
         if data['ball'][0] >= 1080:
-            terminate()  # <---- Дописать попеду
-
+            end_window('win')
     if my_name == 'juck2':
         if data['ball'][0] <= 0:
-            terminate() # <---- Дописать попеду
+            end_window('win')
         if data['ball'][0] >= 1080:
-            terminate() # <---- Дописать проигрыш
+            end_window('lose')
         pass  # <--------- здесь дописать толкание какашки двумя жуками
 
     all_sprites.update(data)
